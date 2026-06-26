@@ -1,14 +1,12 @@
-FROM node:22-alpine AS builder
-WORKDIR /app
-COPY package.json package-lock.json ./
-RUN npm ci
-COPY . .
-RUN npm run build
+FROM python:3.13-slim
 
-FROM node:22-alpine AS runner
 WORKDIR /app
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
 EXPOSE 3000
-CMD ["node", "dist/main/index.js"]
+
+CMD ["python", "-m", "src.main"]

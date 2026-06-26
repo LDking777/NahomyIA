@@ -1,8 +1,0 @@
-export { UsuarioEntity } from './UsuarioEntity'
-export { ProcesoIntencionEntity } from './ProcesoIntencionEntity'
-export { UsuarioIntencionEntity } from './UsuarioIntencionEntity'
-export { FuncionPrealmacenadaEntity } from './FuncionPrealmacenadaEntity'
-export { EjecucionAutomatizadaEntity } from './EjecucionAutomatizadaEntity'
-export { FeedbackReporteEntity } from './FeedbackReporteEntity'
-export { LogAuditoriaEntity } from './LogAuditoriaEntity'
-export { MetricaRendimientoEntity } from './MetricaRendimientoEntity'
