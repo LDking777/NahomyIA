@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nahomy-c2-config
+  labels:
+    app: nahomy-c2
+data:
+  NODE_ENV: 'production'
+  PORT: '3000'
+  DB_HOST: 'nahomy-c2-postgres'
+  DB_PORT: '5432'
+  DB_NAME: 'nahomy_c2'
+  DB_USER: 'nahomy'
+  DB_SSL: 'true'
+  RABBITMQ_URL: 'amqp://guest:guest@nahomy-c2-rabbitmq:5672'
+  RABBITMQ_EXCHANGE: 'c2.events'
+  JWT_EXPIRES_IN: '8h'

@@ -1,0 +1,74 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: nahomy-c2-api-service
+  labels:
+    app: nahomy-c2
+    tier: backend
+spec:
+  type: ClusterIP
+  ports:
+    - port: 3000
+      targetPort: 3000
+      protocol: TCP
+      name: http
+  selector:
+    app: nahomy-c2
+    tier: backend
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nahomy-c2-postgres
+  labels:
+    app: nahomy-c2
+    tier: database
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5432
+      targetPort: 5432
+      protocol: TCP
+      name: postgres
+  selector:
+    app: nahomy-c2
+    tier: database
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nahomy-c2-rabbitmq
+  labels:
+    app: nahomy-c2
+    tier: messaging
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5672
+      targetPort: 5672
+      protocol: TCP
+      name: amqp
+    - port: 15672
+      targetPort: 15672
+      protocol: TCP
+      name: management
+  selector:
+    app: nahomy-c2
+    tier: messaging
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nahomy-c2-ingress
+  labels:
+    app: nahomy-c2
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 80
+      targetPort: 3000
+      protocol: TCP
+      name: http
+  selector:
+    app: nahomy-c2
+    tier: backend

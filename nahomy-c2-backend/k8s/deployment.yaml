@@ -1,0 +1,176 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nahomy-c2-api
+  labels:
+    app: nahomy-c2
+    tier: backend
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: nahomy-c2
+      tier: backend
+  template:
+    metadata:
+      labels:
+        app: nahomy-c2
+        tier: backend
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: api
+          image: nahomy-c2-api:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: nahomy-c2-config
+            - secretRef:
+                name: nahomy-c2-secret
+          resources:
+            requests:
+              cpu: '250m'
+              memory: '256Mi'
+            limits:
+              cpu: '500m'
+              memory: '512Mi'
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 2
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            failureThreshold: 12
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nahomy-c2-postgres
+  labels:
+    app: nahomy-c2
+    tier: database
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nahomy-c2
+      tier: database
+  template:
+    metadata:
+      labels:
+        app: nahomy-c2
+        tier: database
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              value: nahomy
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: nahomy-c2-secret
+                  key: DB_PASSWORD
+            - name: POSTGRES_DB
+              value: nahomy_c2
+          resources:
+            requests:
+              cpu: '500m'
+              memory: '512Mi'
+            limits:
+              cpu: '1'
+              memory: '1Gi'
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+            - name: init-sql
+              mountPath: /docker-entrypoint-initdb.d
+          livenessProbe:
+            exec:
+              command: ['pg_isready', '-U', 'nahomy']
+            initialDelaySeconds: 15
+            periodSeconds: 10
+      volumes:
+        - name: postgres-data
+          persistentVolumeClaim:
+            claimName: nahomy-c2-postgres-pvc
+        - name: init-sql
+          configMap:
+            name: nahomy-c2-init-sql
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nahomy-c2-rabbitmq
+  labels:
+    app: nahomy-c2
+    tier: messaging
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nahomy-c2
+      tier: messaging
+  template:
+    metadata:
+      labels:
+        app: nahomy-c2
+        tier: messaging
+    spec:
+      containers:
+        - name: rabbitmq
+          image: rabbitmq:4-management-alpine
+          ports:
+            - containerPort: 5672
+            - containerPort: 15672
+          env:
+            - name: RABBITMQ_DEFAULT_USER
+              value: guest
+            - name: RABBITMQ_DEFAULT_PASS
+              value: guest
+          resources:
+            requests:
+              cpu: '250m'
+              memory: '256Mi'
+            limits:
+              cpu: '500m'
+              memory: '512Mi'
+          volumeMounts:
+            - name: rabbitmq-data
+              mountPath: /var/lib/rabbitmq
+          livenessProbe:
+            exec:
+              command: ['rabbitmqctl', 'status']
+            initialDelaySeconds: 15
+            periodSeconds: 15
+      volumes:
+        - name: rabbitmq-data
+          persistentVolumeClaim:
+            claimName: nahomy-c2-rabbitmq-pvc
