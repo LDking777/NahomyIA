@@ -10,6 +10,7 @@ from ..infrastructure.persistence.repositories import (
     SQLAlchemyMetricaRendimientoRepository,
 )
 from ..infrastructure.messaging.rabbitmq_adapter import RabbitMQAdapter
+from ..infrastructure.messaging.console_message_bus import ConsoleMessageBus
 from ..infrastructure.webserver.fastapi_server import create_app
 from ..infrastructure.config.rabbitmq_config import get_rabbitmq_url
 from ..application.use_cases import (
@@ -33,8 +34,13 @@ class Container:
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
 
-        self._message_bus = RabbitMQAdapter(get_rabbitmq_url())
-        await self._message_bus.connect()
+        try:
+            self._message_bus = RabbitMQAdapter(get_rabbitmq_url())
+            await self._message_bus.connect()
+        except Exception as e:
+            print(f"[Container] RabbitMQ no disponible ({e}), usando ConsoleMessageBus")
+            self._message_bus = ConsoleMessageBus()
+            await self._message_bus.connect()
 
         async def get_session() -> AsyncSession:
             async with self._session_factory() as session:

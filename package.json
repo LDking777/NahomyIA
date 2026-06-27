@@ -1,0 +1,10 @@
+{
+  "name": "c2-ia",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node dev.js",
+    "dev:server": "cd packages/server && python -m src.main",
+    "dev:client": "cd packages/client && npm run dev"
+  }
+}
